@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creative Ranking — Research Meeting</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f1117;
+  --bg-card: #1a1d27;
+  --bg-hover: #242838;
+  --border: #2a2e3d;
+  --text: #e1e4ed;
+  --text-dim: #8b8fa3;
+  --text-muted: #5a5e72;
+  --accent: #6c8cff;
+  --accent-dim: #3d4f8a;
+  --green: #34d399;
+  --green-dim: #065f46;
+  --yellow: #fbbf24;
+  --yellow-dim: #78350f;
+  --red: #f87171;
+  --red-dim: #7f1d1d;
+  --orange: #fb923c;
+  --orange-dim: #7c2d12;
+  --purple: #a78bfa;
+  --cyan: #22d3ee;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 20px 14px;
+}
+
+.sidebar h1 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+
+.sidebar .subtitle {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.sidebar .date {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.nav-section {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 16px 0 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover { background: var(--bg-hover); color: var(--text); }
+.nav-item.active { background: var(--accent-dim); color: white; }
+
+.nav-item .nav-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  min-width: 22px;
+  text-align: center;
+}
+
+.nav-item.active .nav-num { background: rgba(255,255,255,0.15); color: white; }
+
+/* Summary stats in sidebar */
+.sidebar-stats {
+  margin-top: 20px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.sidebar-stats .stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 11px;
+}
+
+.sidebar-stats .stat-row .label { color: var(--text-dim); }
+.sidebar-stats .stat-row .val { font-weight: 600; }
+.sidebar-stats .stat-row .val.red { color: var(--red); }
+.sidebar-stats .stat-row .val.yellow { color: var(--yellow); }
+.sidebar-stats .stat-row .val.green { color: var(--green); }
+
+/* Main */
+.main {
+  overflow-y: auto;
+  padding: 32px 48px 64px;
+  scroll-behavior: smooth;
+}
+
+.section {
+  max-width: 900px;
+  margin: 0 auto 48px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-dim);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Bullet list */
+.bullet-list {
+  list-style: none;
+  padding: 0;
+}
+
+.bullet-list li {
+  position: relative;
+  padding: 8px 0 8px 20px;
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.bullet-list li::before {
+  content: '•';
+  position: absolute;
+  left: 4px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.bullet-list li strong { color: var(--text); }
+
+.bullet-list.spaced li { padding: 10px 0 10px 20px; }
+
+/* Highlight box */
+.highlight-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 12px 0;
+}
+
+.highlight-box.accent { border-color: var(--accent); }
+.highlight-box.red { border-color: var(--red); background: linear-gradient(135deg, #1f1520, var(--bg-card)); }
+.highlight-box.green { border-color: var(--green); background: linear-gradient(135deg, #0f201a, var(--bg-card)); }
+.highlight-box.yellow { border-color: var(--yellow); background: linear-gradient(135deg, #201a0f, var(--bg-card)); }
+
+.highlight-box .box-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* Flow comparison */
+.flow-compare {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  gap: 0;
+  align-items: start;
+}
+
+.flow-col {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.flow-col.before { border-color: var(--text-muted); }
+.flow-col.after { border-color: var(--red); }
+
+.flow-col-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-col-title .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.flow-arrow-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--accent);
+  padding-top: 40px;
+}
+
+.flow-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 11px;
+  margin-bottom: 2px;
+  border: 1px solid transparent;
+}
+
+.flow-step .step-num {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg);
+  padding: 1px 6px;
+  border-radius: 3px;
+  min-width: 28px;
+  text-align: center;
+}
+
+.flow-step .step-label { flex: 1; color: var(--text-dim); }
+.flow-step .step-unit {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.flow-step.same { background: var(--bg); }
+.flow-step.changed { background: rgba(248, 113, 113, 0.08); border-color: rgba(248, 113, 113, 0.2); }
+.flow-step.changed .step-label { color: var(--red); }
+.flow-step.changed .step-unit { color: var(--red); }
+.flow-step.new { background: rgba(248, 113, 113, 0.12); border: 1px dashed var(--red); }
+.flow-step.new .step-label { color: var(--red); font-weight: 600; }
+.flow-step.new .step-unit { color: var(--red); }
+.flow-step.removed { opacity: 0.4; text-decoration: line-through; background: var(--bg); }
+
+.flow-connector { text-align: center; color: var(--border); font-size: 10px; line-height: 1; margin: 1px 0; }
+
+/* Change cards */
+.change-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.change-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--text-muted);
+}
+
+.change-card.hard { border-left-color: var(--red); }
+.change-card.medium { border-left-color: var(--yellow); }
+.change-card.easy { border-left-color: var(--green); }
+.change-card.none { border-left-color: var(--text-muted); }
+
+.change-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.change-card .card-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.change-card .card-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.badge-hard { background: var(--red-dim); color: var(--red); }
+.badge-medium { background: var(--yellow-dim); color: var(--yellow); }
+.badge-easy { background: var(--green-dim); color: var(--green); }
+.badge-none { background: #2a2e3d; color: var(--text-muted); }
+
+.change-card .card-body {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.change-card .card-body ul {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+}
+
+.change-card .card-body ul li {
+  padding: 2px 0 2px 12px;
+  position: relative;
+}
+
+.change-card .card-body ul li::before {
+  content: '–';
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+}
+
+.change-card .card-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.file-tag {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--purple);
+}
+
+/* Feature grid */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+}
+
+.feature-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.feature-block .cat { font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+.feature-block .count { font-size: 24px; font-weight: 700; }
+.feature-block .note { font-size: 10px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+
+.feature-block.no-change .count { color: var(--text-muted); }
+.feature-block.needs-change { border-color: var(--yellow); }
+.feature-block.needs-change .count { color: var(--yellow); }
+.feature-block.needs-etl { border-color: var(--orange); }
+.feature-block.needs-etl .count { color: var(--orange); }
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+
+.timeline-item.phase1::before { background: var(--green); }
+.timeline-item.phase2::before { background: var(--yellow); }
+.timeline-item.phase3::before { background: var(--orange); }
+.timeline-item.phase4::before { background: var(--red); }
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.timeline-phase {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.timeline-phase.p1 { background: var(--green-dim); color: var(--green); }
+.timeline-phase.p2 { background: var(--yellow-dim); color: var(--yellow); }
+.timeline-phase.p3 { background: var(--orange-dim); color: var(--orange); }
+.timeline-phase.p4 { background: var(--red-dim); color: var(--red); }
+
+.timeline-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.timeline-duration {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'SF Mono', monospace;
+}
+
+.timeline-body {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.timeline-body ul {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0;
+}
+
+.timeline-body ul li {
+  padding: 3px 0 3px 16px;
+  position: relative;
+}
+
+.timeline-body ul li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--text-muted);
+}
+
+.timeline-dep {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* Risk table */
+.risk-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.risk-table th, .risk-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.risk-table th {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.risk-table td { color: var(--text-dim); }
+.risk-table td:first-child { color: var(--text); font-weight: 500; }
+
+/* Asset grid */
+.asset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.asset-card {
+  background: var(--bg-card);
+  border: 1px solid var(--green-dim);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.asset-card .asset-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  margin-bottom: 4px;
+}
+
+.asset-card .asset-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.asset-card .asset-loc {
+  font-family: 'SF Mono', monospace;
+  font-size: 10px;
+  color: var(--purple);
+  margin-top: 4px;
+}
+
+/* Metric row */
+.metric-row {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.metric-box {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+}
+
+.metric-box .metric-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.metric-box .metric-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.metric-box .metric-note {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.metric-box.red .metric-value { color: var(--red); }
+.metric-box.yellow .metric-value { color: var(--yellow); }
+.metric-box.green .metric-value { color: var(--green); }
+.metric-box.muted .metric-value { color: var(--text-muted); }
+
+/* Inference comparison */
+.inference-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.inf-col {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.inf-col.current { border-color: var(--text-muted); }
+.inf-col.proposed { border-color: var(--red); }
+
+.inf-col .inf-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inf-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-bottom: 1px solid rgba(42,46,61,0.5);
+}
+
+.inf-row:last-child { border-bottom: none; }
+.inf-row .inf-val { font-weight: 600; font-family: 'SF Mono', monospace; font-size: 11px; }
+
+/* Distribution mini chart */
+.dist-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin: 12px 0;
+  padding: 0 4px;
+}
+
+.dist-item {
+  flex: 1;
+  text-align: center;
+}
+
+.dist-bar-wrapper {
+  height: 80px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.dist-bar {
+  width: 100%;
+  max-width: 32px;
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.dist-bar:hover { background: var(--cyan); }
+
+.dist-bar .bar-val {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.dist-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Sub header label */
+.sub-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin: 20px 0 8px;
+}
+
+.sub-label.yellow { color: var(--yellow); }
+.sub-label.green { color: var(--green); }
+.sub-label.orange { color: var(--orange); }
+
+code {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--cyan);
+}
+
+/* Summary bar */
+.summary-bar {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 8px;
+  margin: 8px 0;
+}
+
+.summary-bar .seg { transition: width 0.3s; }
+
+.summary-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+.summary-legend .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* Feature Table */
+.ft-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 0;
+  margin-bottom: 4px;
+}
+
+.ft-group.changed { border-color: var(--yellow-dim); }
+.ft-group.maybe { border-color: rgba(251,191,36,0.25); }
+.ft-group.etl { border-color: var(--orange-dim); }
+
+.ft-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.ft-table thead th {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 6px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.ft-table thead th:first-child { width: 20px; padding-right: 0; }
+.ft-table thead th:nth-child(3) { width: 80px; }
+
+.ft-table td {
+  padding: 5px 12px;
+  color: var(--text-dim);
+  border-bottom: 1px solid rgba(42,46,61,0.4);
+}
+
+.ft-table tr:last-child td { border-bottom: none; }
+
+.ft-table td code {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: var(--cyan);
+}
+
+.ft-dot {
+  width: 20px;
+  padding-right: 0 !important;
+}
+
+.ft-dot span {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.ft-change td code { color: var(--yellow); }
+.ft-maybe td code { color: rgba(251,191,36,0.7); }
+.ft-etl td code { color: var(--orange); }
+.ft-etl td:last-child code { color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h1>Creative Ranking</h1>
+    <div class="subtitle">Research Meeting Material</div>
+    <div class="date">2026-03-11 · 方案 A 早期展開</div>
+
+    <div class="nav-section">Agenda</div>
+    <button class="nav-item active" data-section="motivation" onclick="navigateTo('motivation')">
+      <span class="nav-num">1</span> 背景 & 動機
+    </button>
+    <button class="nav-item" data-section="pipeline" onclick="navigateTo('pipeline')">
+      <span class="nav-num">2</span> Pipeline 前後對比
+    </button>
+    <button class="nav-item" data-section="changes" onclick="navigateTo('changes')">
+      <span class="nav-num">3</span> 改動全景圖
+    </button>
+    <button class="nav-item" data-section="features" onclick="navigateTo('features')">
+      <span class="nav-num">4</span> Feature 影響分析
+    </button>
+    <button class="nav-item" data-section="inference" onclick="navigateTo('inference')">
+      <span class="nav-num">5</span> 推論成本
+    </button>
+    <button class="nav-item" data-section="timeline" onclick="navigateTo('timeline')">
+      <span class="nav-num">6</span> 實施時程
+    </button>
+    <button class="nav-item" data-section="risks" onclick="navigateTo('risks')">
+      <span class="nav-num">7</span> 風險 & 緩解
+    </button>
+
+  </div>
+
+  <!-- Main Content -->
+  <div class="main" id="main">
+
+    <!-- 1. 背景 & 動機 -->
+    <div class="section" id="sec-motivation">
+      <div class="section-header">
+        <span class="section-num">1</span>
+        <span class="section-title">背景 & 動機</span>
+      </div>
+
+      <div class="highlight-box accent">
+        <div class="box-title" style="color:var(--accent);">核心問題：排序粒度太粗</div>
+        <ul class="bullet-list">
+          <li>目前以 <strong>adset（廣告組）</strong> 為最小排序單位，一個 adset 下有多個 creative</li>
+          <li>ML model 預測 <strong>adset-level CTR</strong> — 無法區分同 adset 內不同 creative 的品質</li>
+          <li>Creative 選擇靠 <strong>UCB bandit / 隨機</strong>（Phase 14），沒有 ML model 參與</li>
+          <li>Adset embedding = 所有 creative embedding 的平均，<strong>個別 creative 語意被稀釋</strong></li>
+        </ul>
+      </div>
+
+      <div style="margin-top:16px;"></div>
+
+      <div class="highlight-box green">
+        <div class="box-title" style="color:var(--green);">目標 & 預期效益</div>
+        <ul class="bullet-list">
+          <li><strong>CPM 穩定化</strong> — creative-level CTR 預測更精準，出價與實際效果一致</li>
+          <li><strong>推薦更精準</strong> — 針對不同 user 推送最合適的 creative，提升 CTR</li>
+          <li><strong>廣告主價值</strong> — 好素材得到更多曝光，差素材自然被淘汰</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:16px;"></div>
+
+      <div class="highlight-box">
+        <div class="box-title">早期展開（方案 A）的核心概念</div>
+        <ul class="bullet-list">
+          <li>Matching 後，在 <strong>Phase 2.5</strong> 將每個 adset 展開為 N 個 <code>(adset_id, creative_id)</code> candidates</li>
+          <li>後續 <strong>所有 phase</strong>（Feature Loading → CTR → Scoring → Ranking）都以 creative 為單位操作</li>
+          <li>每個 creative 有自己的 CTR 預測，直接參與排序 & 定價</li>
+          <li>排序品質<strong>最佳</strong>，但改動範圍<strong>最大</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 2. Pipeline 前後對比 -->
+    <div class="section" id="sec-pipeline">
+      <div class="section-header">
+        <span class="section-num">2</span>
+        <span class="section-title">Pipeline 前後對比</span>
+      </div>
+
+      <div class="flow-compare">
+        <!-- Before -->
+        <div class="flow-col before">
+          <div class="flow-col-title">
+            <span class="dot" style="background:var(--text-muted)"></span>
+            目前架構（Adset-Level）
+          </div>
+          <div class="flow-step same"><span class="step-num">1-2</span><span class="step-label">Matching → Filter</span><span class="step-unit">N adsets</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step same"><span class="step-num">3-4</span><span class="step-label">Load Ranking Data → Recall</span><span class="step-unit">N adsets</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step same"><span class="step-num">5</span><span class="step-label">Build Features</span><span class="step-unit">N adsets</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step same"><span class="step-num">6-7</span><span class="step-label">CTR / VTR Prediction</span><span class="step-unit">N 次推論</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step same"><span class="step-num">8-11</span><span class="step-label">Score → Price → Auction</span><span class="step-unit">N adsets</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step same"><span class="step-num">12</span><span class="step-label">Adset Ranking</span><span class="step-unit">N adsets</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step same"><span class="step-num">13</span><span class="step-label">Top-K（K=2）</span><span class="step-unit">→ 2 adsets</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step same"><span class="step-num">14</span><span class="step-label">Creative Ranking（bandit）</span><span class="step-unit">2 adsets 內選 creative</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step same"><span class="step-num">15</span><span class="step-label">Top-1 & Response</span><span class="step-unit">→ 2 creatives</span></div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="flow-arrow-col">→</div>
+
+        <!-- After -->
+        <div class="flow-col after">
+          <div class="flow-col-title">
+            <span class="dot" style="background:var(--red)"></span>
+            <span style="color:var(--red)">早期展開（Creative-Level）</span>
+          </div>
+          <div class="flow-step same"><span class="step-num">1-2</span><span class="step-label">Matching → Filter</span><span class="step-unit">N adsets</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step new"><span class="step-num">2.5</span><span class="step-label">⚡ Creative 展開</span><span class="step-unit">N → N×2.8</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step changed"><span class="step-num">3-4</span><span class="step-label">Load Data → Recall</span><span class="step-unit">N×2.8 candidates</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step changed"><span class="step-num">5</span><span class="step-label">Build Features</span><span class="step-unit">N×2.8 candidates</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step changed"><span class="step-num">6-7</span><span class="step-label">CTR / VTR Prediction</span><span class="step-unit">N×2.8 次推論</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step changed"><span class="step-num">8-11</span><span class="step-label">Score → Price → Auction</span><span class="step-unit">需 skip same-adset</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step changed"><span class="step-num">12</span><span class="step-label">Ranking + per-adset dedup</span><span class="step-unit">→ Top-1 creative</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step removed"><span class="step-num">13</span><span class="step-label">Top-K（K=2）</span><span class="step-unit">不再需要</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step removed"><span class="step-num">14</span><span class="step-label">Creative Ranking（bandit）</span><span class="step-unit">不再需要</span></div>
+          <div class="flow-connector">↓</div>
+          <div class="flow-step same"><span class="step-num">15</span><span class="step-label">Top-1 & Response</span><span class="step-unit">→ 1 creative</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px; font-size:12px; color:var(--text-dim); padding:12px 16px; background:var(--bg-card); border-radius:8px; border:1px solid var(--border);">
+        <strong style="color:var(--text);">關鍵差異：</strong>
+        <span style="color:var(--red);">紅色</span> = 需要改動的 phase ·
+        <span style="color:var(--red);border:1px dashed var(--red);padding:0 4px;border-radius:3px;">虛線</span> = 新增步驟 ·
+        <span style="opacity:0.4;text-decoration:line-through;">刪除線</span> = 移除的步驟
+      </div>
+    </div>
+
+    <!-- 3. 改動全景圖 -->
+    <div class="section" id="sec-changes">
+      <div class="section-header">
+        <span class="section-num">3</span>
+        <span class="section-title">改動全景圖</span>
+      </div>
+
+      <!-- Pipeline Phases (按 phase 順序) -->
+      <div class="sub-label">Ranking Pipeline — 按 Phase 順序</div>
+      <div class="change-grid">
+        <!-- Phase 1: Matching -->
+        <div class="change-card none">
+          <div class="card-header">
+            <span class="card-title">Phase 1：Matching</span>
+            <span class="card-badge badge-none">不需改動</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：根據 user context 從 RediSearch 檢索符合 targeting 條件的 adset candidates</li>
+              <li><strong>Contextual Segments</strong>：從 MongoDB 取得 <code>post_tags</code> + <code>forum_tags</code>，合併為 contextual_segments 用於 targeting 比對</li>
+              <li><strong>RediSearch Query</strong>：組合 layout、ad_type、gender、age range、region、school、platform 等 targeting 條件；進階 targeting（forums / tags / segments / custom audience / keywords / interest_l2_tags）以 OR 方式匹配</li>
+              <li><strong>Realtime Targeting</strong>：額外查詢 <code>is_realtime_targeting=True</code> 的 candidates（非 sex request）</li>
+              <li><strong>Feature Loading</strong>：從 RediSearch Feature Index + Bigtable 載入每個 adset 的 feature（bidding、budget、creative IDs、tags 等），包裝為 <code>AdsetWrapper</code></li>
+              <li><strong>Cache</strong>：候選結果 Redis cache TTL 600s，按 <code>(member_id, platform, layout, types, post_id/forum, region)</code> 分 key</li>
+            </ul>
+            <div style="margin-top:6px;padding:6px 10px;background:rgba(108,140,255,0.06);border-radius:6px;font-size:0.82em;color:var(--text-muted);">
+              <strong>不需改動原因</strong>：Matching 維持 adset-level 檢索即可，creative 展開在 Phase 2.5 進行。RediSearch index 不需要改為 creative-level。
+            </div>
+            <div class="card-files">
+              <span class="file-tag">matching.py</span>
+              <span class="file-tag">redisearch_query_builder.py</span>
+              <span class="file-tag">adset_candidate.py</span>
+              <span class="file-tag">adset_loader.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 2: Ad Filter -->
+        <div class="change-card none">
+          <div class="card-header">
+            <span class="card-title">Phase 2：Ad Filter</span>
+            <span class="card-badge badge-none">不需改動</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：過濾不符合投放條件的 adset 和 creative，產出 <code>filtered_available_creative_ids</code></li>
+              <li><strong>Layout Check</strong>（pre-filter）：僅保留支援當前 <code>contextual_layout</code> 的 adsets</li>
+              <li><strong>Creative Filter</strong>：對每個 adset 內的 creatives 做去重過濾，移除最近曝光過的 <code>creative_dedup_id</code>；全部被過濾的 adset 整個移除</li>
+              <li><strong>輸出</strong>：每個 adset 帶有 <code>filtered_available_creative_ids</code>（存活的 creative 列表）和 <code>filtered_creative_dedup_ids</code></li>
+            </ul>
+            <details style="margin-top:8px;">
+              <summary style="cursor:pointer;color:var(--accent);font-size:0.85em;">Ad Filter 篩選條件明細</summary>
+              <div style="margin-top:6px;font-size:0.82em;line-height:1.6;">
+                <strong>Hard Filter — Adset 層級</strong>（按 enum 順序執行）
+                <ol style="padding-left:18px;margin:4px 0 8px;">
+                  <li><strong>Takeover</strong>：版位類型互斥（takeover adset ↔ takeover unit）</li>
+                  <li><strong>Experiment Budget</strong>：<code>exp_cost &ge; daily_budget &times; exp% &times; 1.03</code>（Local Redis cache TTL 1h）</li>
+                  <li><strong>Daily Budget</strong>：<code>today_cost &ge; daily_budget &times; 1000</code>（Local Redis cache TTL 1h）</li>
+                  <li><strong>Impression Cap</strong>：<code>today_imp &ge; daily_cap</code>（預設 3，Remote Redis TTL 30min）</li>
+                  <li><strong>ADN Budget Pacing</strong>：ADN unit 按分鐘 pro-rata &times; 0.7 控速</li>
+                </ol>
+                <strong>Hard Filter — Creative 層級</strong>（僅 TW iOS/Android）
+                <ul style="padding-left:18px;margin:4px 0 8px;">
+                  <li><strong>Recent Creative Exposure</strong>：同 layout 素材去重（Redis hset TTL 1hr，sex=5min）；全部過濾則移除 adset</li>
+                </ul>
+                <strong>Soft Filter</strong>（全部被過濾則不執行）
+                <ul style="padding-left:18px;margin:4px 0 8px;">
+                  <li><strong>Recent Adset Exposure</strong>：避免短時間重複曝光（Redis hset TTL 60s）</li>
+                </ul>
+                <strong>平台差異</strong>
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li>mobileWeb / Desktop：僅 Daily Budget + Takeover，無 creative 去重</li>
+                  <li>Takeover unit：僅 Daily Budget + Impression Cap + Takeover</li>
+                  <li>Sex request：移除 Exp Budget；creative exposure TTL 降為 5min</li>
+                </ul>
+              </div>
+            </details>
+            <div style="margin-top:6px;padding:6px 10px;background:rgba(108,140,255,0.06);border-radius:6px;font-size:0.82em;color:var(--text-muted);">
+              <strong>不需改動原因</strong>：Ad Filter 已有 creative-level 過濾（<code>RecentLayoutDedupCreativeExposureExcludeRule</code>）。Creative 展開（Phase 2.5）使用 filter 產出的 <code>filtered_available_creative_ids</code>，流程自然銜接。
+            </div>
+            <div class="card-files">
+              <span class="file-tag">ad_filter.py</span>
+              <span class="file-tag">ad_filter_exclude_rule.py</span>
+              <span class="file-tag">ad_filter_v2.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 2.5 (NEW) -->
+        <div class="change-card medium">
+          <div class="card-header">
+            <span class="card-title">Phase 2.5：Creative 展開 ⚡ 新增</span>
+            <span class="card-badge badge-medium">中</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>新增步驟</strong>：在 Filter 之後、Load Ranking Data 之前，插入 creative 展開邏輯</li>
+              <li><strong>展開邏輯</strong>：每個 adset 根據 <code>filtered_available_creative_ids</code>（Phase 2 產出）展開為 N 個 <code>(adset_id, creative_id)</code> candidate</li>
+              <li><strong>Candidate 數量</strong>：平均 &times;2.8（每個 adset 平均 2.8 個存活 creative），後續所有 phase 操作對象從 adset &rarr; creative candidate</li>
+              <li><strong>資料結構改變</strong>：目前 <code>available_adsets: List[AdsetWrapper]</code> 每個 wrapper 內含 <code>creatives[]</code> nested list；改為攤平的 candidate list，每個 candidate 帶自己的 <code>creative_id</code></li>
+              <li><strong>Dedup ID</strong>：<code>creative_dedup_id</code> 在展開時從 RediSearch 帶入即可（資料在 adset 載入階段已存在於 <code>creative_dedup_ids</code> 欄位，Phase 14 只是將被選中 creative 的 dedup_id 寫回 adset-level 欄位）</li>
+            </ul>
+            <div class="card-files">
+              <span class="file-tag">ranking_feeder_v6.py</span>
+              <span class="file-tag">ad_filter.py :86-126</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 3: Load Ranking Data -->
+        <div class="change-card hard">
+          <div class="card-header">
+            <span class="card-title">Phase 3：Load Ranking Data</span>
+            <span class="card-badge badge-hard">高</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：從 Bigtable 載入每個 adset 的排序用 features（CTR、VTR、impression 統計、tag 表現等）</li>
+              <li><strong>Row Key</strong>：<code>ad_set_id#&lt;id&gt;#layout#&lt;layout&gt;</code>，column family = <code>adsets</code></li>
+              <li><strong>Adset Features</strong>：lifetime CTR/impression、past 72h CTR（整體 + male/female）、3d CTR/clicks/views、smoothed CTR、VTR dicts（platform&times;gender&times;age 多層級）、budget goal 相關、tag performance（9 欄位）、context post tag overlap（12 欄位）、viewed post similarity</li>
+              <li><strong>Creative Features</strong>：nested 在 adset row 內的 <code>creatives[]</code> array，包含 <code>creative_id</code>、lifetime impression/click、past_72_ctr（整體 + gender）、smoothed/dynamic CTR 等</li>
+              <li><strong>Sampling Metadata</strong>：<code>IS_ADSET_COLD_START</code>（lifetime_imp &lt; 1000）、<code>IS_DAILY_COST_UNREACHED</code>（today_cost &lt; 30K）、<code>IS_SAMPLED</code></li>
+              <li><strong>Cache</strong>：Redis pipeline cache TTL 900s（<code>YOUJI_RANKING_FEATURE_CACHE_V3</code>）</li>
+              <li><strong>Fallback</strong>：Bigtable 異常時返回最小結構（僅含 <code>adset_id</code> + <code>creative_ids</code> list），其餘 features 省略</li>
+            </ul>
+            <details style="margin-top:8px;">
+              <summary style="cursor:pointer;color:var(--red);font-size:0.85em;">Creative Ranking 需改動</summary>
+              <div style="margin-top:6px;font-size:0.82em;line-height:1.6;">
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li>Bigtable fetch 需 deduplicate（同 adset 的多個 candidate 只查一次 row）再 broadcast features 到 N 個 candidate</li>
+                  <li>目前 creative features 打包在 adset row 的 <code>creatives[]</code> array 裡，需改為獨立 creative-keyed row：<code>creative_id#&lt;id&gt;#layout#&lt;layout&gt;</code></li>
+                </ul>
+              </div>
+            </details>
+            <div class="card-files">
+              <span class="file-tag">load_ranking_data.py</span>
+              <span class="file-tag">ranking_logic_profile.py</span>
+              <span class="file-tag">bigtable_client.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 4: Recall -->
+        <div class="change-card easy">
+          <div class="card-header">
+            <span class="card-title">Phase 4：Recall</span>
+            <span class="card-badge badge-easy">低</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：根據 <code>(is_impression_guarantee, is_sampled, is_coldstart)</code> 三維分類，決定哪些 adset 進入後續排序</li>
+              <li><strong>正常路徑</strong>：impression_guarantee（KA/BD 保量）adsets + GT warm（非 cold start 且非 sampled）adsets 合併為 recalled_adsets</li>
+              <li><strong>Sampling 路徑</strong>：若 <code>should_apply_sampling_logic=True</code> 且有 <code>is_sampled=True</code> 的 adsets，shuffle 後回傳並標記 <code>is_sampled_request=True</code>（由 feeder 據此跳過 build feature、CTR、ranking 等後續 phase）；若 sampled 為空則 fallback 到正常路徑</li>
+              <li><strong>Cold Start 歸屬</strong>：cold start 且 <code>is_sampled=True</code> 的 adset 走 sampling 路徑；cold start 但 <code>is_sampled=False</code> 的 adset 因不符合 GT warm 條件而被排除</li>
+              <li><strong>maximum_returns=2</strong>：傳入但未使用（歷史遺留），實際截斷在 Phase 13 Top-K</li>
+            </ul>
+            <details style="margin-top:8px;">
+              <summary style="cursor:pointer;color:var(--red);font-size:0.85em;">Creative Ranking 需改動</summary>
+              <div style="margin-top:6px;font-size:0.82em;line-height:1.6;">
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li>分類與篩選單位從 adset 改為 creative candidate</li>
+                  <li>Cold Start 判斷改為 creative-level（以 <code>creative_lifetime_impression</code>），但判斷邏輯的修改點在 Phase 3 的 <code>load_ranking_data.py</code>（<code>adset_status_group.add_coldstart_status</code>），Recall 只需適配新的 candidate ID</li>
+                  <li>Sampling 分類的 <code>is_sampled</code> 邏輯需決定：是 adset-level（同 adset 的 creative 同進同出）還是 creative-level</li>
+                </ul>
+              </div>
+            </details>
+            <div class="card-files">
+              <span class="file-tag">recall.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 5 -->
+        <div class="change-card hard">
+          <div class="card-header">
+            <span class="card-title">Phase 5：Build Features</span>
+            <span class="card-badge badge-hard">高</span>
+          </div>
+          <div class="card-body">
+            <p style="margin:4px 0 8px;"><strong>功能</strong>：從不同來源取出 5 大類 features，組裝成統一的 model input dict（per candidate）</p>
+            <ol style="padding-left:18px;margin:4px 0;">
+              <li><strong>Member Features</strong>（共用，純取出）
+                <ul style="padding-left:16px;margin:2px 0;"><li><code>member_info.to_model_dict()</code> &mdash; demographics（age, gender, region）+ behavior（feed/dice 7d 指標）+ member embeddings</li></ul>
+              </li>
+              <li><strong>Contextual Features</strong>（共用，純取出）
+                <ul style="padding-left:16px;margin:2px 0;"><li>從 <code>ad_request</code> 取 <code>platform</code>, <code>hour</code>, <code>unit_id</code>, <code>layout</code></li></ul>
+              </li>
+              <li><strong>Embedding Features</strong>（per-adset，純取出）
+                <ul style="padding-left:16px;margin:2px 0;"><li><code>AdsetEmbeddingFeatureRepository.loads()</code> 從 Bigtable 取 512-dim adset embedding（Redis cache TTL 900s）</li></ul>
+              </li>
+              <li><strong>Adset Features</strong>（per-adset，取出 + 計算）
+                <ul style="padding-left:16px;margin:2px 0;">
+                  <li><code>adset.to_dict(model_used=True)</code> 取出 ~53 個 compiled features：</li>
+                  <li><em>Basic</em>：CTR / VTR / impression 各維度</li>
+                  <li><em>Creative</em>：展開每個 creative 的 CTR（含 gender split）、<code>CLICK_VIEWS_INFO_SCORE</code> &rarr; 計算 <code>creative_3d_max_ctr_v2</code> = max(creative CTR) + smoothed 版本</li>
+                  <li><em>Adset Lifetime</em>：<code>adset_lifetime_ctr</code>（fallback <code>ctr_serving</code>）</li>
+                  <li><em>Identity / Budget / Pacing / Targeting</em></li>
+                  <li><em>Tag Performance</em>（9）/ <em>Context Tag Overlap</em>（12）/ <em>Similarity</em></li>
+                  <li><em>Smoothed CTR Fallback</em>：仍為 -1 時，取 account_type 級別 fallback（floor 0.0001）</li>
+                  <li><em>Cascading VTR</em>：<code>platform&times;gender&times;age</code> &rarr; <code>gender</code> &rarr; <code>platform</code> &rarr; <code>overall</code>，取第一個非 -1 值</li>
+                </ul>
+              </li>
+              <li><strong>Interaction Features</strong>（per member &times; adset，取出 + 計算）
+                <ul style="padding-left:16px;margin:2px 0;">
+                  <li><code>InteractionModelFeatureRepository.loads()</code> &mdash; 用 member features 和 adset 的 forum/adset_id 交叉查找：</li>
+                  <li><em>Forum</em>：forum_ctr / forum_group_ctr / forum_visit_count / forum_is_subscribed</li>
+                  <li><em>Engagement</em>：member_adset 1d/3d/7d views/dwells/clicks（7 欄位）</li>
+                  <li><em>Tag</em>：match count/rate, L1/L2 CTR/views, interest scores（13 欄位）</li>
+                </ul>
+              </li>
+            </ol>
+            <p style="margin:6px 0 4px;"><strong>組裝</strong>：主迴圈 <code>for each adset</code>，合併 <code>{member + contextual + interaction[adset_id] + adset_features + embedding}</code> &rarr; <code>List[Dict]</code></p>
+            <details style="margin-top:8px;">
+              <summary style="cursor:pointer;color:var(--red);font-size:0.85em;">Creative Ranking 需改動</summary>
+              <div style="margin-top:6px;font-size:0.82em;line-height:1.6;">
+                <p style="margin:6px 0 2px;font-weight:600;color:var(--red);">A. Embedding Features（對應 3）</p>
+                <p style="margin:2px 0;color:var(--text-muted);font-size:0.95em;">目前 <code>repository.loads(adset_ids)</code> 回傳 <code>List[List[float]]</code>，以 index 對齊 adsets 順序</p>
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li><code>len(embeddings) != len(candidates)</code> 斷言失敗 &rarr; 改用 <strong>dict lookup</strong>（同 adset 多 candidate 會重複查同一份 embedding）</li>
+                  <li>擴展 <code>CreativeEmbeddingFeatureRepository</code>（目前已用於 member embedding 載入 <code>last_clicked_creative_embedding</code>），改為同時以 <code>creative_id</code> 作為 key 載入 ad candidate 的 creative-level embedding</li>
+                  <li><code>avg_adset_embedding</code> &rarr; <code>creative_embedding</code>（512-dim，從 adset 平均 embedding 改為個別 creative embedding）。注意：<code>avg_adset_embedding</code> 目前仍是 production 唯一的 ad-side embedding input（training + serving），切換需同步更新 <code>predictor.yaml</code> 和訓練 pipeline</li>
+                </ul>
+                <p style="margin:6px 0 2px;font-weight:600;color:var(--red);">B. Adset Features（對應 4）</p>
+                <p style="margin:2px 0;color:var(--text-muted);font-size:0.95em;">目前 <code>adset.to_dict(model_used=True)</code> 回傳 adset-level compiled features（~53 個）</p>
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li>8 個 <code>creative_3d_max_ctr</code> 從 <code>max()</code> aggregation &rarr; <strong>per-creative 值</strong>（含 smoothed &times; gender variants），需改 <code>_creative_max_ctr_fn()</code> 的計算邏輯</li>
+                  <li><code>adset.to_dict()</code> 目前只回傳 adset-level features &rarr; 需額外輸出 <strong>per-creative compiled features</strong>（如該 creative 自己的 CTR），讓每個 candidate 拿到對應 creative 的值</li>
+                </ul>
+                <p style="margin:6px 0 2px;font-weight:600;color:var(--red);">C. Interaction Features（對應 5）</p>
+                <p style="margin:2px 0;color:var(--text-muted);font-size:0.95em;">目前 <code>InteractionModelFeatureRepository.loads()</code> 回傳 <code>Dict[adset_id, features]</code>，每個 adset 計算一次</p>
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li><code>interaction_features[adset_id]</code> 同 adset 展開的多個 creative candidate 需 <strong>broadcast</strong> 同一份 interaction features（member &times; adset 層級不因 creative 不同而變），避免重複計算</li>
+                </ul>
+                <p style="margin:6px 0 2px;font-weight:600;color:var(--red);">D. 組裝</p>
+                <p style="margin:2px 0;color:var(--text-muted);font-size:0.95em;">目前 <code>for i, adset in enumerate(adsets)</code> 一個 adset 產出一個 feature dict</p>
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li>迴圈結構從 per-adset &rarr; per-<strong>(adset, creative) pair</strong>：一個 adset 產出多個 feature dicts，index 對齊方式全部要跟著改（<code>avg_adset_embeddings[i]</code>、<code>interaction_features[adset_id]</code>、<code>adset_model_features</code>）</li>
+                </ul>
+              </div>
+            </details>
+            <div class="card-files">
+              <span class="file-tag">build_feature.py</span>
+              <span class="file-tag">ranking_logic_profile.py</span>
+              <span class="file-tag">adset_model_feature.py</span>
+              <span class="file-tag">interaction_model_feature.py</span>
+              <span class="file-tag">ad_embedding_feature.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 6: Estimated CTR -->
+        <div class="change-card hard">
+          <div class="card-header">
+            <span class="card-title">Phase 6：Estimated CTR</span>
+            <span class="card-badge badge-hard">高</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：用 ML model 預測每個 adset 的 CTR，轉換為 <code>AdsetRankingState</code> 用於後續排序</li>
+              <li><strong>ML 推論</strong>：<code>InputsBuilder</code> 將 model features 按 predictor config 組成 tensor &rarr; gRPC 送到 MLServer（timeout 300ms）&rarr; 回傳 <code>model_scores</code>（raw）+ <code>calibrated_scores</code> + <code>model_version</code></li>
+              <li><strong>Adset 分流</strong>：<code>unsampled_adsets</code>（正常）走 ML model；<code>fallback_adsets</code>（Bigtable 異常的）直接 <code>RankingMetric()=None</code></li>
+              <li><strong>CTR 取值</strong>：<code>estimated_ctr = calibrated_score</code>；若 ML call 失敗且為 default 實驗組，fallback 用 <code>clicks_views_info_score</code>（gender-specific 歷史 CTR）</li>
+              <li><strong>平台差異</strong>：mobileWeb / desktop / takeover unit 不走 ML model，改用 <code>random ranking CTR</code></li>
+              <li><strong>Predictor</strong>：由 <code>PREDICTOR_REGISTRY</code> 根據 layout + user experiment group 選擇（如 v53、v54）</li>
+            </ul>
+            <details style="margin-top:8px;">
+              <summary style="cursor:pointer;color:var(--red);font-size:0.85em;">Creative Ranking 需改動</summary>
+              <div style="margin-top:6px;font-size:0.82em;line-height:1.6;">
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li>推論量 &times;2.8（平均），所有 dict keyed by <code>adset_id</code> 會覆蓋重複 &rarr; 改為 <code>(adset_id, creative_id)</code> composite key</li>
+                  <li><code>unsampled_adsets[adset_id]</code>、<code>adset_scorer</code>、<code>ctr_model_estimator</code> 三處 key 都要改</li>
+                  <li>ML fallback CTR 從 adset-level <code>clicks_views_info_score</code> &rarr; creative-level CTR</li>
+                </ul>
+              </div>
+            </details>
+            <div class="card-files">
+              <span class="file-tag">estimated_ctr.py</span>
+              <span class="file-tag">ctr_model_estimator.py</span>
+              <span class="file-tag">adset_scorer.py</span>
+              <span class="file-tag">prediction_service.py</span>
+              <span class="file-tag">inputs_builder.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 7: Estimated VTR -->
+        <div class="change-card none">
+          <div class="card-header">
+            <span class="card-title">Phase 7：Estimated VTR</span>
+            <span class="card-badge badge-none">不需改動</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：為 CPV（Cost-Per-View）bidding 的 adset 設定 VTR，用於計算 eCPM</li>
+              <li><strong>Rule-based</strong>：不使用 ML model，直接取 Phase 5 計算好的 <code>video_views_coalesced_age_gender_platform_adset_vtr</code>（cascading VTR）</li>
+              <li><strong>適用條件</strong>：僅 <code>bidding_strategy == CPV</code> 的 adsets；非 CPV adset 的 <code>estimated_vtr</code> 保持 None</li>
+              <li><strong>VTR Cascade</strong>：platform&times;gender&times;age &rarr; platform&times;gender &rarr; platform-only &rarr; overall <code>past_72_adset_vtr_v5</code>，取第一個非 -1 值</li>
+            </ul>
+            <div style="margin-top:6px;padding:6px 10px;background:rgba(108,140,255,0.06);border-radius:6px;font-size:0.82em;color:var(--text-muted);">
+              <strong>不需改動原因</strong>：VTR 目前為 adset-level rule-based（無 per-creative VTR），且 CPV 佔比低。Creative ranking 初期可維持 adset-level VTR，後續視需求再做 per-creative VTR。
+            </div>
+            <div class="card-files">
+              <span class="file-tag">estimated_vtr.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 8: Score Threshold + Quality Filter -->
+        <div class="change-card none">
+          <div class="card-header">
+            <span class="card-title">Phase 8：Score Threshold + Quality Filter</span>
+            <span class="card-badge badge-none">不需改動</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Score Threshold</strong>：針對 BD_EVENT adsets + list layout，當 <code>budget_burn_rate &gt; 0.8</code> 時，移除 <code>model_prediction_score &lt; threshold</code> 的 adset。保留 <code>1000/daily_impressions</code> 機率隨機 bypass（確保最低曝光量供資料收集）</li>
+              <li><strong>Quality Filter</strong>：依 skip rate 將 adset 分為 skipped（保留，用於 sampling）與 non-skipped（進入品質過濾）兩組：
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li><strong>Skip rate</strong>：<code>min(max(500/total_impressions, 0.05), 0.50)</code>，同一 request 共用一個 random roll</li>
+                  <li><strong>Percentile-based filtering</strong>：non-skipped adsets 根據 <code>quality_percentile</code>（Redis cache，基於 overspending 狀態動態更新）查找 <code>p{percentile}</code> threshold，<code>estimated_ctr &lt; threshold</code> 的 adset 被移除</li>
+                  <li><strong>DAY_END_HOUR</strong>：日末時段所有 adset 標記 skipped，跳過品質過濾</li>
+                </ul>
+              </li>
+            </ul>
+            <div style="margin-top:6px;padding:6px 10px;background:rgba(108,140,255,0.06);border-radius:6px;font-size:0.82em;color:var(--text-muted);">
+              <strong>不需改動原因</strong>：Score threshold 僅針對 BD_EVENT，config 為 adset-level，per-creative score 自然適用。Quality filter 的 <code>_update_percentiles</code> 雖以 <code>adset_id</code> 為 key，但有 Redis lock（60s TTL）保護，同一 request 內多個 creatives 只會更新一次，不需 dedup。Percentile threshold 過濾 per-creative <code>estimated_ctr</code> 語意合理。
+            </div>
+            <div class="card-files">
+              <span class="file-tag">score_threshold.py</span>
+              <span class="file-tag">quality_filter.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 9: Ranking Price -->
+        <div class="change-card none">
+          <div class="card-header">
+            <span class="card-title">Phase 9：Ranking Price</span>
+            <span class="card-badge badge-none">不需改動</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：計算每個 adset 的 eCPM（effective CPM），作為排序基礎價格</li>
+              <li><strong>eCPM 公式</strong>：
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li>CPC：<code>eCPM = estimated_ctr &times; bidding_price &times; 1000</code></li>
+                  <li>CPV：<code>eCPM = estimated_vtr &times; bidding_price &times; 1000</code></li>
+                  <li>CPM：<code>eCPM = bidding_price</code>（直接使用出價）</li>
+                  <li>Bigtable fallback adsets：<code>eCPM = reserve_price[ad_type]</code></li>
+                </ul>
+              </li>
+              <li><strong>Reserve Price Filter</strong>：<code>ranking_price &lt; reserve_price[ad_type]</code> 的 adset 被移除（底價過濾，底價從 MongoDB 載入）</li>
+            </ul>
+            <div style="margin-top:6px;padding:6px 10px;background:rgba(108,140,255,0.06);border-radius:6px;font-size:0.82em;color:var(--text-muted);">
+              <strong>不需改動原因</strong>：eCPM 公式中 <code>estimated_ctr</code> 在上游已是 per-candidate，<code>bidding_price</code> 為 adset-level 共享，公式自然適用。Reserve price filter 與 Bigtable fallback 皆以 adset_id 判斷，candidate 繼承 adset_id，邏輯不變。
+            </div>
+            <div class="card-files">
+              <span class="file-tag">ranking_price.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 10: Targeting Score -->
+        <div class="change-card none">
+          <div class="card-header">
+            <span class="card-title">Phase 10：Targeting Score</span>
+            <span class="card-badge badge-none">不需改動</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：為使用 interest-based targeting 的 adset 加分，提升排序優先順序</li>
+              <li><strong>評分邏輯</strong>：<code>is_interested_based_targeting = True</code> 且實驗組開啟 <code>apply_tag_targeting</code> &rarr; score = 20.0；否則 score = 1.0</li>
+              <li><strong>排序影響</strong>：<code>tag_targeting_score</code> 以 <code>W_TAG_TARGETING = 1.0</code> 權重加入 additive ranking score，20 vs 1 產生 19 分加分優勢</li>
+              <li><strong>目前狀態</strong>：<code>apply_tag_targeting</code> 預設 False（實驗功能）</li>
+            </ul>
+            <div class="card-files">
+              <span class="file-tag">targeting_score.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 11: Cost Price -->
+        <div class="change-card hard">
+          <div class="card-header">
+            <span class="card-title">Phase 11：Cost Price（2nd-price auction）</span>
+            <span class="card-badge badge-hard">高</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：執行 2nd-price auction 決定每個 adset 的實際扣費價格</li>
+              <li><strong>2nd Price 計算</strong>：按 ranking_price 排序後反向遍歷，每個 adset 的 <code>second_price</code> = 下一個不同 account 的 ranking_price（避免 self-bidding）</li>
+              <li><strong>1st Price 例外</strong>：<code>is_impression_guarantee</code> 或 GT + CPM 使用 1st price（直接用自己的 ranking_price）</li>
+              <li><strong>Price Floor</strong>：以 <code>price_floor_probability</code> 機率取 <code>max(cost_price, floor_cost_price)</code>；特殊帳號 80%、sex 30%、一般 50%</li>
+              <li><strong>Raise Price</strong>：hardcode config 可對特定 adset + layout 加價（不超過 ranking_price）</li>
+            </ul>
+            <details style="margin-top:8px;">
+              <summary style="cursor:pointer;color:var(--red);font-size:0.85em;">Creative Ranking 需改動</summary>
+              <div style="margin-top:6px;font-size:0.82em;line-height:1.6;">
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li><strong>核心問題</strong>：同 adset 的 creative 互相計算 2nd price &mdash; 經濟學上不合理（自己跟自己競價）</li>
+                  <li>需 skip same-adset 比較：2nd price 應取「下一個不同 adset 且不同 account」的 ranking_price</li>
+                </ul>
+              </div>
+            </details>
+            <div class="card-files">
+              <span class="file-tag">cost_price.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 12 -->
+        <div class="change-card medium">
+          <div class="card-header">
+            <span class="card-title">Phase 12：Adset Ranking → Creative Ranking</span>
+            <span class="card-badge badge-medium">中</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>功能</strong>：計算 additive ranking score 並排序，決定最終 creative candidate 優先順序（改動後排序對象從 adset → creative）</li>
+              <li><strong>Ranking Score 公式</strong>：<code>2.0 &times; ctr_score + 1.0 &times; pacing_bid_score + 1.0 &times; tag_targeting_score</code>
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li><em>ctr_score</em>：CPC/CPM &rarr; min-max normalize(log(CTR))；CPV &rarr; min-max normalize(VTR)</li>
+                  <li><em>pacing_bid_score</em>：base_bid &times; pacing_factor，其中 pacing_factor = <code>1 + scale &times; tanh(sensitivity &times; diff_ratio)</code>，diff_ratio 反映 budget 花費進度（under/over spending）</li>
+                  <li><em>tag_targeting_score</em>：1.0 或 20.0（見 Phase 10）</li>
+                </ul>
+              </li>
+              <li><strong>Budget Ratio</strong>：<code>target_ratio = elapsed_hourly_budget / current_budget</code>、<code>current_ratio = today_cost / current_budget</code>；GT 帳號和 zero_cost 不計算</li>
+              <li><strong>Hour 23 特殊邏輯</strong>：guaranteed adsets 按 <code>ka_bd_priority</code> 排序（KA 保量優先）+ 其餘按 ranking_price 排序，合併後回傳</li>
+              <li><strong>CTR Rank Metadata</strong>：記錄每個 adset 的 <code>estimated_ctr_rank</code> 和 <code>estimated_ctr_diff</code>（與最高 CTR 的差距），用於 logging</li>
+            </ul>
+            <details style="margin-top:8px;">
+              <summary style="cursor:pointer;color:var(--red);font-size:0.85em;">Creative Ranking 需改動</summary>
+              <div style="margin-top:6px;font-size:0.82em;line-height:1.6;">
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li>排序對象從 adset &rarr; creative candidate</li>
+                  <li>Budget ratio 需 memoize per adset（避免同 adset N 個 candidate 重複計算 <code>today_cost / current_budget</code>）</li>
+                  <li>同 adset 的 creative 可能分散在不同排名位置 &rarr; 排序後加 per-adset dedup（每 adset 只保留最高分 creative），確保 Top-1 回傳不同 adset 的結果</li>
+                </ul>
+              </div>
+            </details>
+            <div class="card-files">
+              <span class="file-tag">adset_ranking.py</span>
+              <span class="file-tag">ranking_metric.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 13 -->
+        <div class="change-card easy">
+          <div class="card-header">
+            <span class="card-title">Phase 13：Top-K</span>
+            <span class="card-badge badge-easy">移除</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>目前功能</strong>：從排序後的 adset list 取前 K 個（<code>maximum_returns = 2</code>），即 <code>adsets[:2]</code>，供 Phase 14 Creative Ranking 使用</li>
+              <li><strong>移除原因</strong>：Top-K 存在的目的是縮小候選範圍給 Phase 14 做 per-adset creative 選擇。Phase 14 移除後，不再需要中間的 Top-K 步驟，Phase 12 排序完直接由 Phase 15 取 Top-1 即可</li>
+            </ul>
+            <div class="card-files"><span class="file-tag">top_k.py</span></div>
+          </div>
+        </div>
+
+        <!-- Phase 14 -->
+        <div class="change-card easy">
+          <div class="card-header">
+            <span class="card-title">Phase 14：Creative Ranking（UCB bandit）</span>
+            <span class="card-badge badge-easy">移除</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>目前功能</strong>：在排好序的 Top-K adset 中，為每個 adset 選出最佳 creative</li>
+              <li><strong>Scoring 分流</strong>（<code>creative_scorer.py:74-87</code>）：依 <code>account_type</code> + <code>is_sampled</code> 決定 creative 選擇策略
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li><strong>UCB bandit</strong>：<code>account_type</code> 為 <code>bd_event</code> 或 <code>gt</code>，且 <code>is_sampled=0</code></li>
+                  <li><strong>Random</strong>：<code>account_type</code> 為 <code>ka</code>，或任何 <code>is_sampled=1</code> 的 adset</li>
+                </ul>
+              </li>
+              <li><strong>Account Type 對應</strong>（<code>constants/__init__.py</code>）：campaign_goal &rarr; account_type
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li><code>guaranteeDeal</code> / <code>takeover</code> &rarr; <strong>KA</strong>（隨機）</li>
+                  <li><code>project</code> &rarr; <strong>BD_EVENT</strong>（UCB）</li>
+                  <li><code>awareness</code> / <code>traffic</code> &rarr; <strong>GT</strong>（UCB）</li>
+                </ul>
+              </li>
+              <li><strong>Random 機制</strong>（KA / sampled）：每個 creative 賦予 <code>random.random()</code>（均勻分佈 0~1）作為 <code>bandit_score</code>，完全不參考歷史 CTR 表現</li>
+              <li><strong>UCB 公式</strong>（BD_EVENT / GT）：<code>score = decay &times; dynamic_smoothed_72h_ctr + (1-decay) &times; &radic;(2&middot;ln(adset_imp)/creative_imp)</code>
+                <ul style="padding-left:18px;margin:4px 0;">
+                  <li><code>decay = min(creative_imp, 2850) / 3000</code>：creative 曝光越多，exploitation 權重越高</li>
+                  <li>Exploration term（UCB1）：adset 曝光多、creative 曝光少 &rarr; 探索分數高</li>
+                </ul>
+              </li>
+              <li><strong>選擇</strong>：每個 adset 的 <code>creative_ranking_states</code> 按 <code>bandit_score</code> 降序排列，取 <code>[0]</code> 設定 <code>adset.creative_id</code> 和 <code>creative_dedup_id</code></li>
+            </ul>
+            <div style="margin-top:8px;padding:8px 10px;background:rgba(255,180,50,0.08);border:1px solid rgba(255,180,50,0.25);border-radius:6px;font-size:0.82em;line-height:1.6;">
+              <strong style="color:var(--orange);">⚠ 移除後需遷移的機制</strong>：KA / sampled adset 的 <strong>Random 機制</strong>（<code>random.random()</code> 作為 score，不參考 CTR）目前由此 phase 負責。移除後需在其他步驟（如 Phase 4 Recall 分流或 Phase 12 Ranking）加入等效邏輯，確保 KA / sampled 的 creative 仍有隨機探索機會，避免 exploitation-only 導致 creative 枯竭。
+            </div>
+            <div class="card-files">
+              <span class="file-tag">creative_ranking.py</span>
+              <span class="file-tag">creative_scorer.py</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phase 15 -->
+        <div class="change-card none">
+          <div class="card-header">
+            <span class="card-title">Phase 15：Top-1 & Response</span>
+            <span class="card-badge badge-none">不需改動</span>
+          </div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Top-1 功能</strong>：從 Phase 12 排序結果取第一名 creative candidate，將其 <code>creative_dedup_id</code> 和 <code>adset_id</code> 寫入 Redis dedup cache，防止短時間重複曝光</li>
+              <li><strong>Dedup 寫入</strong>：creative 寫入 <code>RECENT_EXPOSED_LAYOUT_DEDUP_CREATIVES</code> rule、adset 寫入 <code>RECENT_EXPOSED_ADSETS</code> rule，透過 <code>ad_filter_repository.save()</code> 持久化到 Redis</li>
+              <li><strong>Skip 條件</strong>：mobileWeb / desktop / takeover unit 不寫入 dedup</li>
+              <li><strong>Response 格式</strong>：<code>{"creative_ids": [...], "creatives": [{"id": ..., "price": cost_price}], "track": tracker_json, "apply_takeover": bool}</code></li>
+              <li><strong>Background Tasks</strong>：回應後異步執行 <code>adset_phase_request_counter.commit()</code>（per-phase 計數 logging）和 <code>feature_logger.log_feature()</code>（top-1 features + scores logging）</li>
+            </ul>
+            <div style="margin-top:6px;padding:6px 10px;background:rgba(108,140,255,0.06);border-radius:6px;font-size:0.82em;color:var(--text-muted);">
+              <strong>不需改動原因</strong>：Phase 13 Top-K 和 Phase 14 Creative Ranking 移除後，Phase 12 排序完直接由此 phase 取 Top-1。Response 已回傳 <code>creative_ids</code>，format 不需改動。<code>creative_dedup_id</code> 在 Phase 2.5 展開時即帶入（不再依賴 Phase 14 設定）。
+            </div>
+            <div class="card-files">
+              <span class="file-tag">top_1.py</span>
+              <span class="file-tag">handler.py</span>
+              <span class="file-tag">ad_filter_repository.py</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 4. Feature 影響分析 -->
+    <div class="section" id="sec-features">
+      <div class="section-header">
+        <span class="section-num">4</span>
+        <span class="section-title">Feature 影響分析</span>
+      </div>
+
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">
+        模型共 <strong style="color:var(--text);">93 個 features</strong>（71 Dense + 18 Categorical + 4 Embedding），按<strong style="color:var(--text);">改動類型</strong>（需要做什麼工作）分類：
+      </div>
+
+      <!-- Progress bar -->
+      <div class="summary-bar">
+        <div class="seg" style="width:51%;background:var(--text-muted);"></div>
+        <div class="seg" style="width:11%;background:var(--green);"></div>
+        <div class="seg" style="width:17%;background:var(--yellow);"></div>
+        <div class="seg" style="width:9%;background:var(--orange);"></div>
+        <div class="seg" style="width:13%;background:var(--cyan);"></div>
+      </div>
+      <div class="summary-legend">
+        <span><span class="dot" style="background:var(--text-muted);"></span>不需改動 47 個（51%）</span>
+        <span><span class="dot" style="background:var(--green);"></span>A. 僅改 Serving Code 10 個（11%）</span>
+        <span><span class="dot" style="background:var(--yellow);"></span>B. 新建 Creative-Level ETL 16 個（17%）</span>
+        <span><span class="dot" style="background:var(--orange);"></span>C. 全新 Member×Creative Pipeline 8 個（9%）</span>
+        <span><span class="dot" style="background:var(--cyan);"></span>D. 新增 Creative Tag Serving 12 個（13%）</span>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- 不需改動（47 個） -->
+      <!-- ============================================ -->
+
+      <div style="font-size:14px;font-weight:700;color:var(--text-muted);margin:20px 0 12px;padding:8px 12px;border-left:3px solid var(--text-muted);">不需改動（47 個）</div>
+
+      <!-- Member (17) -->
+      <div class="sub-label">Member（17 個 Dense / Categorical）</div>
+      <div class="ft-group">
+        <table class="ft-table">
+          <thead><tr><th></th><th>Feature</th><th>Type</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>age</code></td><td>Dense</td><td>會員年齡</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>years_since_freshman</code></td><td>Dense</td><td>註冊年數</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>gender_v2</code></td><td>Cat</td><td>性別</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>level_v2</code></td><td>Cat</td><td>會員等級</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>school_name</code></td><td>Cat</td><td>學校名稱</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>school_discipline</code></td><td>Cat</td><td>學科</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>region_code</code></td><td>Cat</td><td>地區</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>dice_1d_viewed_count</code></td><td>Dense</td><td rowspan="10" style="vertical-align:middle">DICE（推薦 feed）行為<br>瀏覽數 / 曝光數 / 觀看率<br>閱讀時長 / 時長超過 P50/P75 次數<br>feed 互動次數</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>dice_7d_impressed_count</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>dice_7d_viewed_count</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>dice_7d_viewed_rate</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>dice_7d_duration_seconds_over_p50_count</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>dice_7d_duration_seconds_over_p75_count</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>feed_7d_count</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>dice_list_7d_duration_seconds</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>dice_post_7d_duration_seconds</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>dice_7d_duration_seconds</code></td><td>Dense</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Member Embedding (2) + Context (4) + Adset 屬性 (6) + Forum (16) + Post Similarity (1) -->
+      <div class="sub-label">Member Embedding（2）· Context（4）· Adset 屬性（8）· Forum Interaction（16）</div>
+      <div class="ft-group">
+        <table class="ft-table">
+          <thead><tr><th></th><th>Feature</th><th>Type</th><th>說明</th></tr></thead>
+          <tbody>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>last_clicked_creative_embedding</code></td><td>Emb 512d</td><td rowspan="2" style="vertical-align:middle">Member Embedding — 最近點擊 creative</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>last_clicked_list_creative_embedding</code></td><td>Emb 512d</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>hour</code></td><td>Cat</td><td rowspan="4" style="vertical-align:middle">Context — 請求時間、平台、版位、版面</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>app_platform</code></td><td>Cat</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>unit_id_v2</code></td><td>Cat</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>layout</code></td><td>Cat</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>is_key_account</code></td><td>Cat</td><td rowspan="8" style="vertical-align:middle">Adset 屬性 — 帳戶 / 投放設定<br>（真正的 adset property，非聚合）</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>is_impression_guarantee</code></td><td>Cat</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>campaign_goal</code></td><td>Cat</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>is_realtime_targeting</code></td><td>Cat</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>ad_type</code></td><td>Cat</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>avg_impression_goal_per_day</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>impression_goal</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>days_since_adset_start</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>forum_ctr</code></td><td>Dense</td><td rowspan="6" style="vertical-align:middle">Forum Interaction — member × post_forum<br>與 creative 無關</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>forum_impressions</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>forum_clicks</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>forum_group_ctr</code> + <code>forum_group_ctr_{3c,dressup,entertainment,finance,food,funny,girl,makeup,talk,travel}</code></td><td>Dense ×11</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>forum_visit_count</code></td><td>Dense</td></tr>
+            <tr class="ft-ok"><td class="ft-dot"><span style="background:var(--text-muted)"></span></td><td><code>forum_is_subscribed</code></td><td>Cat</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- 需改動 / 可拆為 creative-level（46 個） -->
+      <!-- ============================================ -->
+
+      <div style="font-size:14px;font-weight:700;color:var(--yellow);margin:32px 0 12px;padding:8px 12px;border-left:3px solid var(--yellow);">需改動 / 可拆為 creative-level（46 個）— 按改動類型分類</div>
+
+      <!-- A. 僅改 Serving Code (10) -->
+      <div class="sub-label" style="color:var(--green);">A. 僅改 Serving Code（10 個）— per-creative 資料已在 Bigtable，去掉 online 聚合即可</div>
+      <div class="ft-group" style="border-color:var(--green);border-style:dashed;">
+        <table class="ft-table">
+          <thead><tr><th></th><th>現有 Feature</th><th>Type</th><th>聚合方式 → 改為</th></tr></thead>
+          <tbody>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>creative_3d_max_ctr_v2</code></td><td>Dense</td><td><code>MAX</code> → 該 creative 自己的 72h CTR</td></tr>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>creative_3d_max_ctr_female_v2</code></td><td>Dense</td><td><code>MAX</code> → per-creative 女性 CTR</td></tr>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>creative_3d_max_ctr_male_v2</code></td><td>Dense</td><td><code>MAX</code> → per-creative 男性 CTR</td></tr>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>creative_3d_max_ctr_gender_v2</code></td><td>Dense</td><td><code>MAX</code> → per-creative gender CTR</td></tr>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>smoothed_creative_3d_max_ctr_v2</code></td><td>Dense</td><td><code>MAX</code> → per-creative 平滑 CTR</td></tr>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>smoothed_creative_3d_max_ctr_female_v2</code></td><td>Dense</td><td><code>MAX</code> → per-creative 平滑女性 CTR</td></tr>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>smoothed_creative_3d_max_ctr_male_v2</code></td><td>Dense</td><td><code>MAX</code> → per-creative 平滑男性 CTR</td></tr>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>smoothed_creative_3d_max_ctr_gender_v2</code></td><td>Dense</td><td><code>MAX</code> → per-creative 平滑 gender CTR</td></tr>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>avg_adset_embedding</code></td><td>Emb 512d</td><td><code>AVG</code> → 該 creative 的 embedding</td></tr>
+            <tr style="background:rgba(52,211,153,0.05);"><td class="ft-dot"><span style="background:var(--green)"></span></td><td><code>most_similar_viewed_post_embedding</code></td><td>Emb 512d</td><td>adset emb → 用 creative emb 計算 similarity</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;padding:8px 12px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--text-dim);border-left:3px solid var(--green);">
+          <strong style="color:var(--green);">不需動 ETL</strong> — per-creative 資料已存在：Bigtable <code>creatives[]</code> array 有 <code>past_72_ctr</code> / <code>smoothed_past_72_ctr</code>；<code>embeddings</code> CF 有 <code>creative_id#&lt;id&gt;</code>。
+          目前 online serving 做 <code>max()</code> / <code>avg()</code> 聚合（<code>ranking_logic_profile.py:314-346</code>），改為直接取該 creative 的值即可。
+        </div>
+      </div>
+
+      <!-- B. 需新建 Creative-Level ETL (16) -->
+      <div class="sub-label yellow">B. 需新建 Creative-Level ETL（16 個）— offline 直算 adset level，上游有 creative 資料</div>
+      <div class="ft-group changed">
+        <table class="ft-table">
+          <thead><tr><th></th><th>現有 Feature</th><th>Type</th><th>改為 creative-level</th></tr></thead>
+          <tbody>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_ctr</code></td><td>Dense</td><td rowspan="4" style="vertical-align:middle">→ <code>creative_3d_ctr</code> + gender variants<br>需從 <code>mart__ctr__creative__detail__hourly</code> 計算</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_ctr_female</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_ctr_male</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_ctr_gender</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>smoothed_adset_3d_ctr</code></td><td>Dense</td><td rowspan="4" style="vertical-align:middle">→ <code>smoothed_creative_3d_ctr</code> + gender variants<br>需新增 creative-level Bayesian smoothing</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>smoothed_adset_3d_ctr_female</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>smoothed_adset_3d_ctr_male</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>smoothed_adset_3d_ctr_gender</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_clicks</code></td><td>Dense</td><td rowspan="4" style="vertical-align:middle">→ <code>creative_3d_clicks</code> + gender variants</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_clicks_female</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_clicks_male</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_clicks_gender</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_views</code></td><td>Dense</td><td rowspan="4" style="vertical-align:middle">→ <code>creative_3d_views</code> + gender variants</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_views_female</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_views_male</code></td><td>Dense</td></tr>
+            <tr class="ft-change"><td class="ft-dot"><span style="background:var(--yellow)"></span></td><td><code>adset_3d_views_gender</code></td><td>Dense</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;padding:8px 12px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--text-dim);border-left:3px solid var(--yellow);">
+          <strong style="color:var(--yellow);">⚠ 與類型 A 的關鍵差異</strong> — 這些 <code>adset_3d_*</code> 是在 offline ETL 中<strong>直接從 adset-level 表計算</strong>（<code>adset_features.sql:76-97</code> 讀取 <code>ad_adset_ctr_v2_hourly</code>），<strong>不是</strong>從 creative 數據聚合而來。
+          雖然上游 <code>mart__ctr__creative__detail__hourly</code> 有 creative 資料，但需要建立全新的 creative-level ETL SQL + Bigtable serving rows。
+        </div>
+      </div>
+
+      <!-- C. 全新 Member×Creative Pipeline (8) -->
+      <div class="sub-label orange">C. 全新 Member×Creative Pipeline（8 個）— 需建 3-DAG pipeline</div>
+      <div class="ft-group etl">
+        <table class="ft-table">
+          <thead><tr><th></th><th>現有 Feature</th><th>Type</th><th>展開為 creative-level</th></tr></thead>
+          <tbody>
+            <tr class="ft-etl"><td class="ft-dot"><span style="background:var(--orange)"></span></td><td><code>member_adset_1d_views</code></td><td>Dense</td><td>→ <code>member_creative_1d_views</code></td></tr>
+            <tr class="ft-etl"><td class="ft-dot"><span style="background:var(--orange)"></span></td><td><code>member_adset_1d_dwells</code></td><td>Dense</td><td>→ <code>member_creative_1d_dwells</code></td></tr>
+            <tr class="ft-etl"><td class="ft-dot"><span style="background:var(--orange)"></span></td><td><code>member_adset_3d_views</code></td><td>Dense</td><td>→ <code>member_creative_3d_views</code></td></tr>
+            <tr class="ft-etl"><td class="ft-dot"><span style="background:var(--orange)"></span></td><td><code>member_adset_3d_dwells</code></td><td>Dense</td><td>→ <code>member_creative_3d_dwells</code></td></tr>
+            <tr class="ft-etl"><td class="ft-dot"><span style="background:var(--orange)"></span></td><td><code>member_adset_7d_views</code></td><td>Dense</td><td>→ <code>member_creative_7d_views</code></td></tr>
+            <tr class="ft-etl"><td class="ft-dot"><span style="background:var(--orange)"></span></td><td><code>member_adset_7d_clicks</code></td><td>Dense</td><td>→ <code>member_creative_7d_clicks</code></td></tr>
+            <tr class="ft-etl"><td class="ft-dot"><span style="background:var(--orange)"></span></td><td><code>member_adset_7d_dwells</code></td><td>Dense</td><td>→ <code>member_creative_7d_dwells</code></td></tr>
+            <tr class="ft-etl"><td class="ft-dot"><span style="background:var(--orange)"></span></td><td><code>max_full_pv_similarity</code></td><td>Dense</td><td>→ per-creative similarity（改用 creative emb 計算）</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;padding:8px 12px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--text-dim);border-left:3px solid var(--orange);">
+          <strong style="color:var(--orange);">工作量最大</strong> — 需建立全新 3-DAG pipeline（compute → hourly_serving → daily_serving），參考 <code>ad_member_adset_engagement_*</code> 架構。
+          資料源 <code>mart__bilanx_dad__imp__hourly</code> 已有 <code>creative_id</code>，但 member×creative pair 數約為 member×adset 的 2-3 倍。
+        </div>
+      </div>
+
+      <!-- D. 新增 Creative Tag Serving (12) -->
+      <div class="sub-label" style="color:var(--cyan);">D. 新增 Creative Tag Serving（12 個）— per-creative tag 已存在，需新增 Bigtable serving</div>
+      <div class="ft-group">
+        <div style="margin-bottom:10px;padding:8px 12px;background:rgba(34,211,238,0.08);border:1px solid rgba(34,211,238,0.2);border-radius:6px;font-size:11px;color:var(--text-dim);line-height:1.6;">
+          <strong style="color:var(--cyan);">Per-creative tag 資料已存在</strong>：<code>ad_creative_tags_hourly</code> DAG 對每個 creative 獨立呼叫 Tagging API → 存入 <code>creative_tags</code> 表（per creative_id）→ 再用 <code>ARRAY_CONCAT_AGG</code> 聚合為 <code>adset_tags</code>。同 adset 不同 creative <strong style="color:var(--text);">確實可能有不同 tag</strong>（不同素材內容 → 不同 tagging 結果）。<br>
+          <strong style="color:var(--yellow);">缺少的</strong>：① Bigtable <code>creative_tags_serving</code> 表（新增 serving SQL + config）② Youji 12 個 feature definitions（改讀 creative tag）
+        </div>
+        <table class="ft-table">
+          <thead><tr><th></th><th>現有 Feature</th><th>Type</th><th>改動方式</th></tr></thead>
+          <tbody>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_l1_distinct_match_count</code></td><td>Dense</td><td rowspan="3" style="vertical-align:middle">adset_tag → creative_tag<br>（set intersection 邏輯不變）</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_l2_distinct_match_count</code></td><td>Dense</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_distinct_match_count</code></td><td>Dense</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_l1_distinct_match</code></td><td>Cat</td><td rowspan="3" style="vertical-align:middle">match indicator（0/1）</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_l2_distinct_match</code></td><td>Cat</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_distinct_match</code></td><td>Cat</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_l1_distinct_match_rate_by_adset</code></td><td>Dense</td><td rowspan="3" style="vertical-align:middle">match rate by adset → by creative<br>（分母改為 creative tag count）</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_l2_distinct_match_rate_by_adset</code></td><td>Dense</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_distinct_match_rate_by_adset</code></td><td>Dense</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_l1_distinct_match_rate_by_post</code></td><td>Dense</td><td rowspan="3" style="vertical-align:middle">分母是 post 側，不變</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_l2_distinct_match_rate_by_post</code></td><td>Dense</td></tr>
+            <tr style="background:rgba(34,211,238,0.05);"><td class="ft-dot"><span style="background:var(--cyan)"></span></td><td><code>context_post_adset_tag_distinct_match_rate_by_post</code></td><td>Dense</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px;padding:8px 12px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--text-dim);line-height:1.6;">
+          <strong>工作量：小～中</strong> — ETL 小（新增 <code>creative_tags_serving.sql</code> + Bigtable config），Serving 中但機械性高（copy <code>adset_features.py:522-793</code> 改讀 creative tags）。<br>
+          <strong>優先級較高</strong>：資料已有，僅差 serving layer，可與 Type A 同批實作。
+        </div>
+      </div>
+
+      <!-- Creative vs Adset Trade-off -->
+      <div class="highlight-box yellow" style="margin-top:24px;">
+        <div class="box-title" style="color:var(--yellow);">Creative vs. Adset Feature Granularity Trade-off</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;line-height:1.7;">
+          核心問題不是 Creative Signal 不足，而是 <strong style="color:var(--text);">Granularity vs. Stability 的權衡</strong>：
+        </div>
+        <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:14px;">
+          <tr style="color:var(--text-dim);border-bottom:1px solid var(--border);">
+            <td style="padding:6px 8px;"></td>
+            <td style="padding:6px 8px;text-align:center;"><strong style="color:var(--cyan);">Creative-level</strong></td>
+            <td style="padding:6px 8px;text-align:center;"><strong style="color:var(--purple);">Adset-level</strong></td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:6px 8px;color:var(--text-dim);">Granularity</td>
+            <td style="padding:6px 8px;text-align:center;color:var(--green);">✓ 能區分同 adset 下不同素材</td>
+            <td style="padding:6px 8px;text-align:center;color:var(--red);">✗ 同 adset 素材共用同一組值</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 8px;color:var(--text-dim);">Stability</td>
+            <td style="padding:6px 8px;text-align:center;color:var(--red);">✗ 資料量少、variance 高、cold start 嚴重</td>
+            <td style="padding:6px 8px;text-align:center;color:var(--green);">✓ 聚合後統計穩定</td>
+          </tr>
+        </table>
+        <div class="box-title" style="font-size:12px;">建議策略：Hierarchical Features</div>
+        <ul class="bullet-list" style="margin-top:4px;">
+          <li><strong>兩層共存</strong>：同類 feature（如 CTR）同時提供 adset-level 與 creative-level，讓 model 自行學習權重 — 資料充足時依賴 creative-level，稀疏時自動 fallback 到 adset-level</li>
+          <li><strong>Smoothing + 信賴度</strong>：creative 統計值 shrink toward adset-level（Empirical Bayes），並加入 <code>impression_count</code> 讓 model 判斷信賴度</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 5. 推論成本 -->
+    <div class="section" id="sec-inference">
+      <div class="section-header">
+        <span class="section-num">5</span>
+        <span class="section-title">推論成本</span>
+      </div>
+
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:16px;">
+        <strong style="color:var(--text);">Creative/Adset 分佈</strong>（過去 7 天實際數據，659 active adsets）
+      </div>
+
+      <!-- Distribution chart -->
+      <div class="highlight-box">
+        <div class="dist-row">
+          <div class="dist-item">
+            <div class="dist-bar-wrapper"><div class="dist-bar" style="height:8%"><span class="bar-val">1</span></div></div>
+            <div class="dist-label">P25</div>
+          </div>
+          <div class="dist-item">
+            <div class="dist-bar-wrapper"><div class="dist-bar" style="height:16%"><span class="bar-val">2</span></div></div>
+            <div class="dist-label">P50</div>
+          </div>
+          <div class="dist-item">
+            <div class="dist-bar-wrapper"><div class="dist-bar" style="height:24%"><span class="bar-val">3</span></div></div>
+            <div class="dist-label">P75</div>
+          </div>
+          <div class="dist-item">
+            <div class="dist-bar-wrapper"><div class="dist-bar" style="height:48%;background:var(--yellow)"><span class="bar-val">6</span></div></div>
+            <div class="dist-label">P90</div>
+          </div>
+          <div class="dist-item">
+            <div class="dist-bar-wrapper"><div class="dist-bar" style="height:72%;background:var(--orange)"><span class="bar-val">9</span></div></div>
+            <div class="dist-label">P95</div>
+          </div>
+          <div class="dist-item">
+            <div class="dist-bar-wrapper"><div class="dist-bar" style="height:100%;background:var(--red)"><span class="bar-val">14</span></div></div>
+            <div class="dist-label">P99</div>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:8px;">
+          creatives / adset（實際有曝光的）· 平均 <strong style="color:var(--cyan);">2.8</strong> · <strong>75% 的 adset ≤3 個 creative</strong>
+        </div>
+      </div>
+
+      <!-- Comparison -->
+      <div class="inference-compare" style="margin-top:16px;">
+        <div class="inf-col current">
+          <div class="inf-title"><span style="color:var(--text-muted);">●</span> 目前架構</div>
+          <div class="inf-row"><span>推論範圍</span><span class="inf-val">N recalled adsets</span></div>
+          <div class="inf-row"><span>推論量增幅</span><span class="inf-val">×1（基準）</span></div>
+        </div>
+        <div class="inf-col proposed">
+          <div class="inf-title"><span style="color:var(--red);">●</span> <span style="color:var(--red);">早期展開</span></div>
+          <div class="inf-row"><span>推論範圍</span><span class="inf-val" style="color:var(--red);">N × all creatives</span></div>
+          <div class="inf-row"><span>推論量增幅</span><span class="inf-val" style="color:var(--red);">×2.8 avg / P90 ×6</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 6. 實施時程 -->
+    <div class="section" id="sec-timeline">
+      <div class="section-header">
+        <span class="section-num">6</span>
+        <span class="section-title">實施時程</span>
+      </div>
+
+      <div style="font-size:13px;color:var(--text-dim);margin-bottom:16px;">
+        工時 <strong style="color:var(--red);">~9-12 weeks</strong>，calendar ~14-18 weeks（含等待期），分 4 個 Phase 執行
+      </div>
+
+      <!-- Visual timeline bar -->
+      <div style="display:flex;gap:2px;margin-bottom:20px;border-radius:6px;overflow:hidden;height:24px;">
+        <div style="flex:2.5;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--green);">P1 · 2-3w</div>
+        <div style="flex:2.5;background:var(--yellow-dim);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--yellow);">P2 · 2-3w</div>
+        <div style="flex:3.5;background:var(--orange-dim);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--orange);">P3 · 3-4w</div>
+        <div style="flex:2;background:var(--red-dim);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--red);">P4 · 2w</div>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-item phase1">
+          <div class="timeline-header">
+            <span class="timeline-phase p1">Phase 1</span>
+            <span class="timeline-title">資料基礎建設</span>
+            <span class="timeline-duration">~2-3 weeks</span>
+          </div>
+          <div class="timeline-body">
+            <ul>
+              <li>Training Feature Log 加入 creative_id（Youji-Ranking，目前 <code>feature_logger_service.py</code> 只 log <code>adset_ids</code>，response/tracker 已有 creative_id）</li>
+              <li>Training Data SQL 加入 creative_id join（Dcard-ETL）</li>
+              <li>Creative CTR 特徵 ETL（ETL-Server）</li>
+              <li>Creative Feature Bigtable Rows（ETL-Server）</li>
+            </ul>
+            <div class="timeline-dep">前置條件：無，可立即開始 · 產出：creative-level 訓練資料開始累積</div>
+          </div>
+        </div>
+
+        <div class="timeline-item phase2">
+          <div class="timeline-header">
+            <span class="timeline-phase p2">Phase 2</span>
+            <span class="timeline-title">模型訓練</span>
+            <span class="timeline-duration">~2-3 weeks</span>
+          </div>
+          <div class="timeline-body">
+            <ul>
+              <li>新增 creative features 定義（creative_ctr, creative_embedding）</li>
+              <li>替換 avg_adset_embedding → per-creative embedding</li>
+              <li>訓練 creative-level CTR model + Calibration 驗證</li>
+            </ul>
+            <div class="timeline-dep">前置條件：Phase 1 完成 + 資料累積 ≥ 2 weeks</div>
+          </div>
+        </div>
+
+        <div class="timeline-item phase3">
+          <div class="timeline-header">
+            <span class="timeline-phase p3">Phase 3</span>
+            <span class="timeline-title">Serving 改造</span>
+            <span class="timeline-duration">~3-4 weeks</span>
+          </div>
+          <div class="timeline-body">
+            <ul>
+              <li>新增 Phase 2.5 Creative 展開步驟</li>
+              <li>Feature Loading 支援 creative-level（deduplicate + broadcast）</li>
+              <li>Build Feature 改為 per-creative（embedding + CTR）</li>
+              <li>CTR Prediction 改 composite key + 推論量 ×2.8</li>
+              <li>2nd-price Auction skip same-adset + budget memoize</li>
+              <li>Top-K per-adset dedup + diversity 控制</li>
+              <li>部署 creative model 到 Model Server</li>
+            </ul>
+            <div class="timeline-dep">前置條件：Phase 2 模型訓練完成</div>
+          </div>
+        </div>
+
+        <div class="timeline-item phase4">
+          <div class="timeline-header">
+            <span class="timeline-phase p4">Phase 4</span>
+            <span class="timeline-title">上線驗證</span>
+            <span class="timeline-duration">~2 weeks</span>
+          </div>
+          <div class="timeline-body">
+            <ul>
+              <li>A/B Test：adset ranking (control) vs creative ranking (experiment)</li>
+              <li>核心指標：CTR, eCPM, revenue, latency, fill rate</li>
+              <li>Gradual rollout：5% → 20% → 50% → 100%</li>
+            </ul>
+            <div class="timeline-dep">前置條件：Phase 3 serving 改造完成</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-box yellow" style="margin-top:8px;">
+        <div class="box-title" style="color:var(--yellow);">注意：Phase 間存在等待時間</div>
+        <ul class="bullet-list">
+          <li>Phase 1 → Phase 2 之間需 <strong>等待 2-4 weeks</strong> 讓 creative-level 訓練資料累積</li>
+          <li>總 calendar time 可能 <strong>14-18 weeks</strong>（含等待期）</li>
+          <li>Phase 1 & Phase 3 前期可部分並行（data model 設計）</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 7. 風險 & 緩解 -->
+    <div class="section" id="sec-risks">
+      <div class="section-header">
+        <span class="section-num">7</span>
+        <span class="section-title">風險</span>
+      </div>
+
+      <table class="risk-table">
+        <thead>
+          <tr><th>風險</th><th>影響</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span style="color:var(--red);">●</span> 推論延遲增加</td>
+            <td>P99 latency 超標（×2.8 avg，P99 ×14）</td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--red);">●</span> Creative cold start</td>
+            <td>現行 cold start 判斷是 adset-level（<code>adset_lifetime_impression &lt; 1000</code>），新 creative 掛在 warm adset 下不會被識別為 cold start，長期無法獲曝光</td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--red);">●</span> 2nd-price Auction 複雜化</td>
+            <td>同 adset 多 creative 互相算價，經濟學不合理</td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--orange);">●</span> Phase 14 Random 機制遷移</td>
+            <td>KA / sampled adset 的 creative 失去隨機探索，exploitation-only 導致 creative 枯竭</td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--orange);">●</span> Member×creative 稀疏性</td>
+            <td>展開到 creative level 後 engagement 資料更薄</td>
+          </tr>
+          <tr>
+            <td><span style="color:var(--red);">●</span> A/B 雙模式共存</td>
+            <td>兩組共用 budget 計數器（pacing 互相干擾）、歷史 CTR feature（回饋迴圈）、dedup cache（creative 選擇交叉）；同時部署雙 model 增加 MLServer 負載；pipeline 至少 7 處分支</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
+  </div>
+</div>
+
+<script>
+function navigateTo(sectionId) {
+  const el = document.getElementById('sec-' + sectionId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.section === sectionId));
+}
+
+// Highlight active nav on scroll
+const main = document.getElementById('main');
+const sections = ['motivation', 'pipeline', 'changes', 'features', 'inference', 'timeline', 'risks'];
+
+main.addEventListener('scroll', () => {
+  let current = sections[0];
+  for (const id of sections) {
+    const el = document.getElementById('sec-' + id);
+    if (el && el.getBoundingClientRect().top <= 120) {
+      current = id;
+    }
+  }
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.section === current));
+});
+</script>
+</body>
+</html>
